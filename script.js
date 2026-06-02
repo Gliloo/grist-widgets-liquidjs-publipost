@@ -1,6 +1,4 @@
 // Script for a Grist widget using Liquid templating
-// This script handles the display of Liquid templates based on Grist data
-
 let options = null;
 let record = null;
 let records = null;
@@ -27,7 +25,7 @@ container.addEventListener("load", () => {
     widgetWindow.scrollTo(lastScrollX, lastScrollY);
 });
 
-// On garde 'read table' pour ne pas bloquer le chargement initial
+// On garde 'read table' pour que les editors puissent charger le widget
 grist.ready({
     onEditOptions: openConfig,
     requiredAccess: 'read table',
@@ -103,13 +101,12 @@ async function render() {
 
         const tableId = await grist.selectedTable.getTableId();
         
-        // 🛡️ ASTUCE ANTI-BLOCAGE : On essaie de lire le schéma. Si Grist bloque, on crée un schéma "factice" basé sur les données reçues.
+        // 🛡️ SÉCURITÉ : Si Grist bloque la lecture du schéma, on utilise les données brutes
         let fields = [];
         try {
             fields = await cache.getFields(tableId);
         } catch (e) {
             console.warn("Grist bloque la lecture du schéma. Utilisation des données brutes de l'enregistrement.", e);
-            // Fallback : on crée des champs fictifs à partir des clés de l'objet record
             const sourceData = multiple ? (records[0] || {}) : (record || {});
             fields = Object.keys(sourceData).map(key => ({
                 colId: key,
@@ -126,10 +123,10 @@ async function render() {
         if (templateFromOther) {
             [newSrc, templateRecord] = await getRefTemplate(options.templateTableId, options.templateId, options.templateColumnId);
         } else {
-            const currentColData = record[colId];
+            const currentColData = record ? record[colId] : null;
             if (Array.isArray(currentColData) && currentColData[0] === "R") {
                 [newSrc, templateRecord] = await getRefTemplate(currentColData[1], currentColData[2], options.templateRefColumnId);
-            else {
+            } else {
                 [newSrc, templateRecord] = [currentColData, null];
             }
         }
@@ -139,7 +136,7 @@ async function render() {
             : new RecordDrop(record, fields, tokenInfo);
 
         if (templateRecord) {
-            data._template = new RecordDrop(templateRecord, await cache.getFields(templateFromOther ? options.templateTableId : record[colId][1]), tokenInfo);
+            data._template = new RecordDrop(templateRecord, await cache.getFields(templateFromOther ? options.templateTableId : (record[colId] ? record[colId][1] : null)), tokenInfo);
         }
 
         if (src !== newSrc) {
@@ -199,7 +196,7 @@ async function openConfig(opts) {
                 <p><strong>🔒 Configuration réservée aux administrateurs</strong></p>
                 <p>La configuration du widget nécessite des droits complets sur le document.</p>
                 <p>Le widget fonctionne normalement pour la visualisation et l'impression.</p>
-           0.9em; color: #888;">
+                <p style="font-size: 0.9em; color: #888;">
                     Pour configurer ce widget, connectez-vous avec un compte ayant les droits complets.
                 </p>
             </div>
