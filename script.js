@@ -1,23 +1,25 @@
 // Script for a Grist widget using Liquid templating
-let options = null;
-let record = null;
-let records = null;
-let src = "";
-let previousHtml = "";
-let template = undefined;
-let cache;
-let refreshTimer;
-let tokenInfo;
-let currentAccessLevel = 'read table';
+// This script handles the display of Liquid templates based on Grist data
+
+let options = null; // Widget configuration options
+let record = null; // Received record
+let records = null; // Received records
+let src = ""; // Liquid template source
+let previousHtml = ""; // Previous rendered html
+let template = undefined; // Compiled template or error
+let cache; // Cache for tables and fields
+let refreshTimer; // Timer for refresh at regular interval
+let tokenInfo; // Access token
 const engine = new liquidjs.Liquid({
     outputEscape: "escape",
     jsTruthy: true,
-});
+}); // Liquid engine
 let multiple = false;
 let currentURL = null;
 const container = document.getElementById("container");
 const settings = document.getElementById("settings");
 const widgetWindow = container.contentWindow;
+
 
 let lastScrollY;
 let lastScrollX;
@@ -25,20 +27,15 @@ container.addEventListener("load", () => {
     widgetWindow.scrollTo(lastScrollX, lastScrollY);
 });
 
-// On garde 'read table' pour que les editors puissent charger le widget
+
 grist.ready({
     onEditOptions: openConfig,
-    requiredAccess: 'read table',
+    requiredAccess: 'full',
     allowSelectBy: true
 });
 
-grist.onOptions((opts, interaction) => {
-    if (interaction && interaction.access_level) {
-        currentAccessLevel = interaction.access_level;
-    }
-});
-
 window.addEventListener('message', async (event) => {
+    // Security: Validate origin
     if (event.source !== widgetWindow) return;
     switch (event.data.command) {
         case "select":
@@ -51,7 +48,8 @@ window.addEventListener('message', async (event) => {
     }
 });
 
-grist.onRecords(throttle(async (recs) => {
+// Callback for multiple record updates
+grist.onRecords(throttle(async (recs, mappings) => {
     records = recs;
     if (multiple) {
         if (options.templateTableId === undefined) {
@@ -63,6 +61,8 @@ grist.onRecords(throttle(async (recs) => {
     }
 }, 200), { includeColumns: "all", expandRefs: false, keepEncoded: true });
 
+
+// Callback for single record update
 grist.onRecord(throttle(async rec => {
     record = rec;
     if (!multiple) {
@@ -75,68 +75,54 @@ grist.onRecord(throttle(async rec => {
     }
 }, 200), { includeColumns: "normal", expandRefs: false, keepEncoded: true });
 
+
+// Callback for options update
 grist.onOptions(async opts => {
     options = opts || {};
     multiple = options.multiple;
 
-    if ((multiple || options.templateFromOther) && options.templateTableId === undefined || !(multiple || options.templateFromOther) && options.templateColumnId === undefined) {
+    if ((multiple || options.templateFromOther) && options.templateTableId === undefined || !(multiple || options.templateFromOther) && options.templateColumnId === undefined
+
+    ) {
         cache = new CachedTables();
         await openConfig();
     } else if (record || records) {
         await render();
     }
-});
+})
 
+// Function to render the template in the HTML container
 async function render() {
     try {
         const templateFromOther = options.templateFromOther || multiple;
+
         document.getElementById("print").style.display = "block";
         cache = cache ? cache : new CachedTables();
 
-        try {
-            tokenInfo = tokenInfo || await grist.docApi.getAccessToken({ readOnly: true });
-        } catch (e) {
-            console.warn("Token non disponible :", e);
-        }
-
-        const tableId = await grist.selectedTable.getTableId();
-        
-        // 🛡️ SÉCURITÉ : Si Grist bloque la lecture du schéma, on utilise les données brutes
-        let fields = [];
-        try {
-            fields = await cache.getFields(tableId);
-        } catch (e) {
-            console.warn("Grist bloque la lecture du schéma. Utilisation des données brutes de l'enregistrement.", e);
-            const sourceData = multiple ? (records[0] || {}) : (record || {});
-            fields = Object.keys(sourceData).map(key => ({
-                colId: key,
-                type: 'Any',
-                id: key,
-                label: key,
-                widgetOptions: null
-            }));
-        }
-
-        const colId = templateFromOther ? null : fields.find(t => t.id == options.templateColumnId)?.colId;
-        
-        let newSrc, templateRecord;
-        if (templateFromOther) {
-            [newSrc, templateRecord] = await getRefTemplate(options.templateTableId, options.templateId, options.templateColumnId);
-        } else {
-            const currentColData = record ? record[colId] : null;
-            if (Array.isArray(currentColData) && currentColData[0] === "R") {
-                [newSrc, templateRecord] = await getRefTemplate(currentColData[1], currentColData[2], options.templateRefColumnId);
-            } else {
-                [newSrc, templateRecord] = [currentColData, null];
+        // Tentative de récupération du token, sans bloquer si refusé
+        if (!tokenInfo) {
+            try {
+                tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
+            } catch (e) {
+                console.warn("Token non disponible (droits insuffisants) :", e);
+                tokenInfo = null;
             }
         }
 
+        const tableId = await grist.selectedTable.getTableId();
+        const fields = await cache.getFields(tableId);
+        const colId = templateFromOther ? null : fields.find(t => t.id == options.templateColumnId).colId;
+        const [newSrc, templateRecord] = templateFromOther ?
+            await getRefTemplate(options.templateTableId, options.templateId, options.templateColumnId)
+            : (Array.isArray(record[colId]) && record[colId][0] === "R"
+                ? await getRefTemplate(record[colId][1], record[colId][2], options.templateRefColumnId)
+                : [record[colId], null]);
         const data = multiple
             ? new RecordDrop({ records: records.map(rec => new RecordDrop(rec, fields, tokenInfo)) }, fields, tokenInfo)
             : new RecordDrop(record, fields, tokenInfo);
 
         if (templateRecord) {
-            data._template = new RecordDrop(templateRecord, await cache.getFields(templateFromOther ? options.templateTableId : (record[colId] ? record[colId][1] : null)), tokenInfo);
+            data._template = new RecordDrop(templateRecord, await cache.getFields(templateFromOther ? options.templateTableId : record[colId][1]), tokenInfo)
         }
 
         if (src !== newSrc) {
@@ -150,7 +136,8 @@ async function render() {
 
         const html = template?.ok
             ? await engine.render(template.ok, data)
-            : (template?.error ? `<p style="color:red;">Template Error: ${template.error}</p>` : "<p>En attente des données...</p>");
+            : (template?.error ? `<p style="color:red;">Template Error: ${template.error}</p>`
+                : "<p>Waiting for data or template</p>");
 
         if (html !== previousHtml) {
             lastScrollY = widgetWindow.scrollY;
@@ -164,20 +151,12 @@ async function render() {
         }
 
         previousHtml = html;
+
         clearTimeout(refreshTimer);
         refreshTimer = setTimeout(() => { cache = null; render() }, 3000);
 
     } catch (e) {
-        console.error("Erreur critique de rendu :", e);
-        settings.innerHTML = `
-            <div style="padding: 16px; font-family: sans-serif; color: #555;">
-                <p><strong>⚠️ Erreur d'affichage</strong></p>
-                <p>Le widget n'a pas pu générer le contenu.</p>
-                <p style="font-size: 0.9em; color: #888;">Détail : ${e.message || e}</p>
-            </div>
-        `;
-        container.style.display = "none";
-        document.getElementById("print").style.display = "none";
+        console.warn("Erreur de rendu :", e);
     }
 }
 
@@ -189,22 +168,8 @@ function cleanUpHtml(input) {
     return doctype(input.trimStart());
 }
 
+// Function to open the widget configuration
 async function openConfig(opts) {
-    if (currentAccessLevel !== 'full') {
-        settings.innerHTML = `
-            <div style="padding: 16px; font-family: sans-serif; color: #555;">
-                <p><strong>🔒 Configuration réservée aux administrateurs</strong></p>
-                <p>La configuration du widget nécessite des droits complets sur le document.</p>
-                <p>Le widget fonctionne normalement pour la visualisation et l'impression.</p>
-                <p style="font-size: 0.9em; color: #888;">
-                    Pour configurer ce widget, connectez-vous avec un compte ayant les droits complets.
-                </p>
-            </div>
-        `;
-        container.style.display = "none";
-        document.getElementById("print").style.display = "none";
-        return;
-    }
 
     clearTimeout(refreshTimer);
     previousHtml = "";
@@ -215,7 +180,11 @@ async function openConfig(opts) {
     const multipleConfig = opts && "multiple" in opts ? opts.multiple : multiple;
     const otherTable = other || multipleConfig;
 
-    const tableId = otherTable ? (opts?.tid || options?.templateTableId) : await grist.selectedTable.getTableId();
+
+    const tableId = otherTable ?
+        opts?.tid || options?.templateTableId
+        : await grist.selectedTable.getTableId();
+
     const tables = otherTable ? await cache.getTables() : null;
 
     const handlers = {};
@@ -223,10 +192,11 @@ async function openConfig(opts) {
   <div>
     <input type="radio" id="single" name="mode" value="single" onclick="setMultiple(false)" ${multipleConfig ? "" : "checked"} />
     <label for="single">Single record</label>
+
     <input type="radio" id="multiple" name="mode" value="multiple" onclick="setMultiple(true)" ${multipleConfig ? "checked" : ""}/>
     <label for="multiple">Record list</label>
   </div>
-</fieldset>`;
+</fieldset>`
 
     if (!multipleConfig) {
         out += `<fieldset><legend>Get template from:</legend>
@@ -234,6 +204,7 @@ async function openConfig(opts) {
                 <span><input type="radio" id="tplcol" name="tplsrc" ${other ? "" : "checked"} /><label for="tplcol">Column</label></span>
                 <span><input type="radio" id="tpltbl" name="tplsrc" ${other ? "checked" : ""} /><label for="tpltbl">Other table</label></span>
             </p></fieldset>`;
+
         handlers["tplcol"] = ["click", () => setOther(opts, false)];
         handlers["tpltbl"] = ["click", () => setOther(opts, true)];
     }
@@ -246,43 +217,48 @@ async function openConfig(opts) {
             Object.values(tables).map(table => `<option value="${table.id}" ${table.id === tableId ? "selected" : ""}>${table.tableId}</option>`).join("<br/>") +
             `</select></p>`;
         handlers["template-table-id"] = ["change", () => selectTemplatesTable(opts)];
+
     }
 
     if (!otherTable || tableId) {
         const fields = await cache.getFields(otherTable ? tables[tableId].tableId : tableId);
         const field = colId ? fields.find(t => t.id === colId) : undefined;
 
+
         out += `<p>Column: <select id="template-col-id"><option value=""></option>` +
             fields.filter(f => f.type === "Text" || (otherTable ? false : f.type.startsWith("Ref:"))).map(col => `<option value="${col.id}" ${col.id === colId ? "selected" : ""}>${col.label}</option>`).join("<br/>") +
-            `</select></p>`;
+            `</select><p>`;
+
         handlers["template-col-id"] = ["change", () => selectTemplateColumn(opts, otherTable ? tableId : null)];
 
         if (otherTable) {
             out += `<p>Label: <select id="template-label-id"><option value=""></option>` +
                 fields.filter(f => f.type === "Text" && f.id !== colId).map(col => `<option value="${col.id}" ${col.id === labelId ? "selected" : ""}>${col.label}</option>`).join("<br/>") +
-                `</select></p>`;
+                `</select><p>`
             handlers["template-label-id"] = ["change", () => selectLabelColumn(opts, tableId, colId)];
+
         } else {
             const fieldRef = field?.type.startsWith("Ref") ? field.type.slice(4) : null;
             const refFields = fieldRef ? await cache.getFields(fieldRef) : null;
             out += (refFields ?
                 `<p>Code: <select id="template-ref-col-id"><option value=""></option>` +
                 refFields.filter(f => f.type === "Text").map(col => `<option value="${col.id}" ${col.id === options?.templateRefColumnId ? "selected" : ""}>${col.label}</option>`).join("<br/>") +
-                `</select></p>` : "");
+                `</select><p>`
+                : "")
             cond = {
                 multiple: multipleConfig,
                 templateFromOther: other,
                 templateTableId: tableId,
                 templateColumnId: colId,
                 isRef: refFields ? true : false
-            };
+            }
         }
 
         if (otherTable && colId && labelId) {
-            const recordsData = await cache.getTable(tables[tableId].tableId);
-            const fieldLabel = fields.find(f => f.id === labelId).colId;
+            const records = await cache.getTable(tables[tableId].tableId);
+            const field = fields.find(f => f.id === labelId).colId;
             out += `<p>Template: <select id="template-id"><option value=""></option>` +
-                recordsData.map(rec => `<option value="${rec.id}" ${rec.id === options?.templateId ? "selected" : ""}>${rec[fieldLabel]}</option>`).join("<br/>") +
+                records.map(rec => `<option value="${rec.id}" ${rec.id === options?.templateId ? "selected" : ""}>${rec[field]}</option>`).join("<br/>") +
                 `</select></p>`;
             cond = {
                 multiple: multipleConfig,
@@ -306,25 +282,28 @@ async function openConfig(opts) {
 }
 
 function setMultiple(bool) {
-    openConfig({ multiple: bool, allowSelectBy: document.getElementById("template-allow-select-by")?.checked });
+    openConfig({ multiple: bool, allowSelectBy: document.getElementById("template-allow-select-by").checked });
 }
 
 function setOther(opts, bool) {
     openConfig({ ...opts, templateFromOther: bool });
 }
 
+// Function called when selecting a template column
 function selectTemplatesTable(opts) {
     openConfig({ ...opts, tid: parseInt(document.getElementById("template-table-id").value) });
 }
-
+// Function called when selecting a template column
 function selectTemplateColumn(opts, tid) {
     openConfig({ ...opts, tid, colId: parseInt(document.getElementById("template-col-id").value) });
 }
-
+// Function called when selecting a label column
 function selectLabelColumn(opts, tid, colId) {
     openConfig({ ...opts, tid, colId, labelId: parseInt(document.getElementById("template-label-id").value) });
 }
 
+
+// Function to validate and apply template options
 function validateTemplate(opts) {
     if (opts.multiple || opts.templateFromOther) {
         const templateId = parseInt(document.getElementById("template-id")?.value);
@@ -332,7 +311,10 @@ function validateTemplate(opts) {
             alert("Please select a template.");
             return;
         }
-        if (options.templateTableId !== opts.templateTableId || options.templateColumnId !== opts.templateColumnId || options.templateLabelColumnId !== opts.templateLabelColumnId || options.templateId !== templateId) {
+        if (options.templateTableId !== opts.templateTableId
+            || options.templateColumnId !== opts.templateColumnId
+            || options.templateLabelColumnId !== opts.templateLabelColumnId
+            || options.templateId !== templateId) {
             grist.setOptions({
                 multiple: opts.multiple,
                 templateFromOther: opts.templateFromOther,
@@ -348,7 +330,8 @@ function validateTemplate(opts) {
             alert("Please select a column.");
             return;
         }
-        if (options.templateColumnId !== opts.templateColumnId || options.templateRefColumnId !== templateRefColumnId) {
+        if (options.templateColumnId !== opts.templateColumnId
+            || options.templateRefColumnId !== templateRefColumnId) {
             grist.setOptions({
                 multiple: false,
                 templateColumnId: opts.templateColumnId,
@@ -356,9 +339,11 @@ function validateTemplate(opts) {
             });
         }
     }
+
     render();
 }
 
+// Function to retrieve template from a reference
 async function getRefTemplate(tableId, rowId, templateRefColumnId) {
     const fields = await cache.getFields(tableId);
     const colId = fields.find(t => t.id === templateRefColumnId).colId;
@@ -367,13 +352,19 @@ async function getRefTemplate(tableId, rowId, templateRefColumnId) {
     return [template[colId], template];
 }
 
+// Class to cache Grist tables and fields
 class CachedTables {
     #tables = null;
     #types = {};
     #tablesData = {};
 
+    constructor() {
+    }
+
+    // Retrieves the list of tables
     async getTables() {
-        if (this.#tables) return this.#tables;
+        if (this.#tables)
+            return this.#tables;
         const raw = await grist.docApi.fetchTable('_grist_Tables');
         this.#tables = Object.fromEntries(raw.id.map((id, i) =>
             [id, Object.fromEntries(Object.keys(raw).map(k => [k, raw[k][i]]))]
@@ -381,8 +372,12 @@ class CachedTables {
         return this.#tables;
     }
 
+
+    // Retrieves fields of a table
     async getFields(tableId) {
-        if (this.#types[tableId]) return this.#types[tableId];
+        if (this.#types[tableId])
+            return this.#types[tableId];
+
         let tid = tableId;
         if (typeof tableId === "string") {
             const tables = await this.getTables();
@@ -400,12 +395,16 @@ class CachedTables {
         return this.#types[tableId];
     }
 
+    // Retrieves data of a table
     async getTable(tableId) {
         if (typeof tableId === "number") {
             const tables = await this.getTables();
             tableId = tables[tableId].tableId;
         }
-        if (this.#tablesData[tableId]) return this.#tablesData[tableId];
+
+        if (this.#tablesData[tableId])
+            return this.#tablesData[tableId];
+
         const table = await grist.docApi.fetchTable(tableId);
         const fields = Object.keys(table);
         this.#tablesData[tableId] = table.id.map((_, i) => {
@@ -416,13 +415,21 @@ class CachedTables {
     }
 }
 
+// Utility function to parse JSON safely
 function safeParse(value) {
-    try { return JSON.parse(value); } catch (err) { return null; }
+    try {
+        return JSON.parse(value);
+    } catch (err) {
+        return null;
+    }
 }
 
+
+// Class to represent a record as a Liquid Drop object
 class RecordDrop extends liquidjs.Drop {
     constructor(record, fields, tokenInfo) {
         super();
+
         if (fields) {
             this._ = Object.fromEntries(fields.map(f => {
                 const opts = f.widgetOptions;
@@ -430,7 +437,7 @@ class RecordDrop extends liquidjs.Drop {
                     opts.styles = stylesFromOptions(opts);
                     opts.headerStyles = headerStylesFromOptions(opts);
                 }
-                return [f.colId, opts];
+                return [f.colId, opts]
             }));
         } else {
             this._ = {};
@@ -447,49 +454,65 @@ class RecordDrop extends liquidjs.Drop {
                 case "Ref":
                     if (Array.isArray(record[key]) && record[key][0] == "R") {
                         const tableId = field?.type?.split(":")[1];
-                        Object.defineProperty(this, key, { get: refGetter(tableId, record[key][2], tokenInfo) });
+                        Object.defineProperty(this, key, {
+                            get: refGetter(tableId, record[key][2], tokenInfo)
+                        });
                     } else if (typeof record[key] === "number") {
                         const tableId = field?.type?.split(":")[1];
-                        Object.defineProperty(this, key, { get: refGetter(tableId, record[key], tokenInfo) });
+                        Object.defineProperty(this, key, {
+                            get: refGetter(tableId, record[key], tokenInfo)
+                        });
                     } else {
                         this[key] = record[key];
                     }
                     break;
+
                 case "RefList":
                     if (Array.isArray(record[key]) && record[key][0] == "L") {
                         const tableId = field?.type?.split(":")[1];
-                        Object.defineProperty(this, key, { get: refListGetter(tableId, record[key]?.slice(1), tokenInfo) });
+                        Object.defineProperty(this, key, {
+                            get: refListGetter(tableId, record[key]?.slice(1), tokenInfo)
+                        });
                     } else if (typeof record[key] === "number") {
                         const tableId = field?.type?.split(":")[1];
-                        Object.defineProperty(this, key, { get: refListGetter(tableId, record[key], tokenInfo) });
+                        Object.defineProperty(this, key, {
+                            get: refListGetter(tableId, record[key], tokenInfo)
+                        });
                     } else {
                         this[key] = record[key];
                     }
                     break;
+
                 case "Attachments":
-                    if (Array.isArray(record[key])) {
-                        this[key] = record[key]?.slice(1).map(id => `${tokenInfo.baseUrl}/attachments/${id}/download?auth=${tokenInfo.token}`);
+                    if (Array.isArray(record[key]) && tokenInfo) {
+                        this[key] = record[key]?.slice(1).map(id => {
+                            return `${tokenInfo.baseUrl}/attachments/${id}/download?auth=${tokenInfo.token}`;
+                        });
                     } else {
                         this[key] = record[key];
                     }
                     break;
+
                 case "ChoiceList":
                     if (Array.isArray(record[key])) {
-                        this[key] = record[key]?.slice(1).map(c => new ValueDrop(c, field?.widgetOptions?.choiceOptions?.[c], rules));
+                        this[key] = record[key]?.slice(1).map(c => new ValueDrop(c, field?.widgetOptions?.choiceOptions?.[c]), rules);
                     } else {
                         this[key] = record[key];
                     }
                     break;
+
                 case "Choice":
                     this[key] = new ValueDrop(record[key], field?.widgetOptions?.choiceOptions?.[record[key]], rules);
                     break;
+
                 default:
-                    any(this, key, record[key], tokenInfo, field?.widgetOptions, rules);
+                    any(this, key, record[key], tokenInfo, field?.widgetOptions, rules)
             }
         }
     }
 }
 
+// Class to represent a dict as a Liquid Drop object
 class DictDrop extends liquidjs.Drop {
     constructor(dict, tokenInfo) {
         super();
@@ -499,11 +522,13 @@ class DictDrop extends liquidjs.Drop {
     }
 }
 
+
 class ValueDrop extends liquidjs.Drop {
     constructor(value, options, rules) {
         super();
         this.value = value;
         this._ = { ...options };
+
         if (options) {
             this._.styles = stylesFromOptions(options);
             this._.headerStyles = headerStylesFromOptions(options);
@@ -512,7 +537,9 @@ class ValueDrop extends liquidjs.Drop {
             }
         }
     }
-    valueOf() { return this.value; }
+    valueOf() {
+        return this.value;
+    }
 }
 
 function stylesFromOptions(options) {
@@ -522,7 +549,7 @@ function stylesFromOptions(options) {
         (options.fontBold ? `font-weight: bold;` : "") +
         (options.fontUnderline ? `text-decoration: underline;` : "") +
         (options.fontItalic ? `font-style: italic;` : "") +
-        (options.fontStrikethrough ? `text-decoration-line: line-through;` : "");
+        (options.fontStrikethrough ? `text-decoration-line: line-through;` : "")
 }
 
 function headerStylesFromOptions(options) {
@@ -532,19 +559,36 @@ function headerStylesFromOptions(options) {
         (options.headerFontBold ? `font-weight: bold;` : "") +
         (options.headerFontUnderline ? `text-decoration: underline;` : "") +
         (options.headerFontItalic ? `font-style: italic;` : "") +
-        (options.headerFontStrikethrough ? `text-decoration-line: line-through;` : "");
+        (options.headerFontStrikethrough ? `text-decoration-line: line-through;` : "")
 }
 
 function any(o, key, data, tokenInfo, options, rules) {
     if (Array.isArray(data)) {
         switch (data[0]) {
-            case 'L': o[key] = data?.slice(1); break;
-            case 'O': o[key] = new DictDrop(data[1], tokenInfo); break;
-            case 'D': o[key] = new Date(data[1] * 1000); break;
-            case 'd': o[key] = new Date(data[1] * 1000); break;
-            case 'R': Object.defineProperty(o, key, { get: refGetter(data[1], data[2]) }); break;
-            case 'r': Object.defineProperty(o, key, { get: refListGetter(data[1], data[2], tokenInfo) }); break;
-            default: o[key] = data;
+            case 'L':
+                o[key] = data?.slice(1);
+                break;
+            case 'O':
+                o[key] = new DictDrop(data[1], tokenInfo);
+                break;
+            case 'D':
+                o[key] = new Date(data[1] * 1000);
+                break;
+            case 'd':
+                o[key] = new Date(data[1] * 1000);
+                break;
+            case 'R':
+                Object.defineProperty(o, key, {
+                    get: refGetter(data[1], data[2])
+                });
+                break;
+            case 'r':
+                Object.defineProperty(o, key, {
+                    get: refListGetter(data[1], data[2], tokenInfo)
+                });
+                break;
+            default:
+                o[key] = data;
         }
     } else {
         o[key] = new ValueDrop(data, options, rules);
@@ -554,11 +598,15 @@ function any(o, key, data, tokenInfo, options, rules) {
 function refGetter(tableId, rowId) {
     let ref;
     return async function () {
-        if (ref) return ref;
+        if (ref) {
+            return ref;
+        }
         const table = await cache.getTable(tableId);
         const fields = await cache.getFields(tableId);
         const row = table.find(r => r.id === rowId);
-        if (!row) return null;
+        if (!row) {
+            return null;
+        }
         ref = new RecordDrop(row, fields, tokenInfo);
         return ref;
     };
@@ -567,15 +615,23 @@ function refGetter(tableId, rowId) {
 function refListGetter(tableId, ids, tokenInfo) {
     let refList;
     return async function () {
-        if (refList) return refList;
+        if (refList) {
+            return refList;
+        }
         const table = await cache.getTable(tableId);
         const fields = await cache.getFields(tableId);
+
         refList = ids.map(rowId => {
             let row = table.find(r => r.id === rowId);
-            return row ? new RecordDrop(row, fields, tokenInfo) : null;
+            if (row) {
+                return new RecordDrop(row, fields, tokenInfo);
+            } else {
+                return null;
+            }
         });
+
         return refList;
-    };
+    }
 }
 
 function throttle(fn, delay) {
