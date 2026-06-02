@@ -30,9 +30,25 @@ container.addEventListener("load", () => {
 
 grist.ready({
     onEditOptions: openConfig,
-    requiredAccess: 'full',
+    requiredAccess: 'read table',
     allowSelectBy: true
 });
+
+// Puis, là où vous appelez getAccessToken :
+try {
+    tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
+} catch (e) {
+    // accès insuffisant, désactiver les fonctions dépendantes
+    console.warn("Token non disponible :", e);
+}
+
+// Puis, là où vous appelez getAccessToken :
+try {
+    tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
+} catch (e) {
+    // accès insuffisant, désactiver les fonctions dépendantes
+    console.warn("Token non disponible :", e);
+}
 
 window.addEventListener('message', async (event) => {
     // Security: Validate origin
