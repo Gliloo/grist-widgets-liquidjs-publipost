@@ -28,27 +28,17 @@ container.addEventListener("load", () => {
 });
 
 
+// ✅ CORRECTION 1 : requiredAccess passe à 'full' pour que la config fonctionne
 grist.ready({
     onEditOptions: openConfig,
-    requiredAccess: 'read table',
+    requiredAccess: 'full',
     allowSelectBy: true
 });
 
-// Puis, là où vous appelez getAccessToken :
-try {
-    tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
-} catch (e) {
-    // accès insuffisant, désactiver les fonctions dépendantes
-    console.warn("Token non disponible :", e);
-}
 
-// Puis, là où vous appelez getAccessToken :
-try {
-    tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
-} catch (e) {
-    // accès insuffisant, désactiver les fonctions dépendantes
-    console.warn("Token non disponible :", e);
-}
+// ✅ CORRECTION 2 : suppression des deux blocs try/catch dupliqués en haut
+// (le token sera récupéré seulement quand nécessaire, dans render())
+
 
 window.addEventListener('message', async (event) => {
     // Security: Validate origin
@@ -108,61 +98,84 @@ grist.onOptions(async opts => {
 })
 
 // Function to render the template in the HTML container
+// ✅ CORRECTION 3 : toute la fonction render() est protégée par un try/catch
 async function render() {
-    const templateFromOther = options.templateFromOther || multiple;
+    try {
+        const templateFromOther = options.templateFromOther || multiple;
 
-    document.getElementById("print").style.display = "block";
-    cache = cache ? cache : new CachedTables();
-    tokenInfo = tokenInfo || await grist.docApi.getAccessToken({ readOnly: true });
+        document.getElementById("print").style.display = "block";
+        cache = cache ? cache : new CachedTables();
 
-    const tableId = await grist.selectedTable.getTableId();
-    const fields = await cache.getFields(tableId);
-    const colId = templateFromOther ? null : fields.find(t => t.id == options.templateColumnId).colId;
-    const [newSrc, templateRecord] = templateFromOther ?
-        await getRefTemplate(options.templateTableId, options.templateId, options.templateColumnId)
-        : (Array.isArray(record[colId]) && record[colId][0] === "R"
-            ? await getRefTemplate(record[colId][1], record[colId][2], options.templateRefColumnId)
-            : [record[colId], null]);
-    const data = multiple
-        ? new RecordDrop({ records: records.map(rec => new RecordDrop(rec, fields, tokenInfo)) }, fields, tokenInfo)
-        : new RecordDrop(record, fields, tokenInfo);
-
-    if (templateRecord) {
-        data._template = new RecordDrop(templateRecord, await cache.getFields(templateFromOther ? options.templateTableId : record[colId][1]), tokenInfo)
-    }
-
-
-    if (src !== newSrc) {
-        src = newSrc;
+        // ✅ CORRECTION 4 : le token est récupéré ici, dans un try/catch
         try {
-            template = { ok: engine.parse(src) };
+            tokenInfo = tokenInfo || await grist.docApi.getAccessToken({ readOnly: true });
         } catch (e) {
-            template = { error: e.toString() };
+            console.warn("Token non disponible (droits insuffisants) :", e);
+            // On continue quand même, certaines fonctions seront juste désactivées
         }
+
+        const tableId = await grist.selectedTable.getTableId();
+        const fields = await cache.getFields(tableId);
+        const colId = templateFromOther ? null : fields.find(t => t.id == options.templateColumnId).colId;
+        const [newSrc, templateRecord] = templateFromOther ?
+            await getRefTemplate(options.templateTableId, options.templateId, options.templateColumnId)
+            : (Array.isArray(record[colId]) && record[colId][0] === "R"
+                ? await getRefTemplate(record[colId][1], record[colId][2], options.templateRefColumnId)
+                : [record[colId], null]);
+        const data = multiple
+            ? new RecordDrop({ records: records.map(rec => new RecordDrop(rec, fields, tokenInfo)) }, fields, tokenInfo)
+            : new RecordDrop(record, fields, tokenInfo);
+
+        if (templateRecord) {
+            data._template = new RecordDrop(templateRecord, await cache.getFields(templateFromOther ? options.templateTableId : record[colId][1]), tokenInfo)
+        }
+
+
+        if (src !== newSrc) {
+            src = newSrc;
+            try {
+                template = { ok: engine.parse(src) };
+            } catch (e) {
+                template = { error: e.toString() };
+            }
+        }
+
+
+        const html = template?.ok
+            ? await engine.render(template.ok, data)
+            : (template?.error ? `<p style="color:red;">Template Error: ${template.error}</p>`
+                : "<p>Waiting for data or template</p>");
+
+        if (html !== previousHtml) {
+            lastScrollY = widgetWindow.scrollY;
+            lastScrollX = widgetWindow.scrollX;
+
+            if (currentURL) { URL.revokeObjectURL(currentURL); }
+            currentURL = URL.createObjectURL(new Blob([cleanUpHtml(html)], { type: "text/html" }));
+            container.src = currentURL;
+            container.style.display = "";
+            settings.innerHTML = "";
+
+        }
+
+        previousHtml = html;
+
+        clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => { cache = null; render() }, 3000);
+
+    } catch (e) {
+        // ✅ Message gracieux si l'utilisateur n'a pas les droits
+        console.warn("Erreur de rendu :", e);
+        settings.innerHTML = `
+            <div style="padding: 16px; font-family: sans-serif; color: #555;">
+                <p><strong>⚠️ Affichage limité</strong></p>
+                <p>Ce widget nécessite des droits d'accès plus élevés pour afficher le contenu.</p>
+                <p style="font-size: 0.9em; color: #888;">Détail : ${e.message || e}</p>
+            </div>
+        `;
+        container.style.display = "none";
+        document.getElementById("print").style.display = "none";
     }
-
-
-    const html = template?.ok
-        ? await engine.render(template.ok, data)
-        : (template?.error ? `<p style="color:red;">Template Error: ${template.error}</p>`
-            : "<p>Waiting for data or template</p>");
-
-    if (html !== previousHtml) {
-        lastScrollY = widgetWindow.scrollY;
-        lastScrollX = widgetWindow.scrollX;
-
-        if (currentURL) { URL.revokeObjectURL(currentURL); }
-        currentURL = URL.createObjectURL(new Blob([cleanUpHtml(html)], { type: "text/html" }));
-        container.src = currentURL;
-        container.style.display = "";
-        settings.innerHTML = "";
-
-    }
-
-    previousHtml = html;
-
-    clearTimeout(refreshTimer);
-    refreshTimer = setTimeout(() => { cache = null; render() }, 3000);
 }
 
 function cleanUpHtml(input) {
