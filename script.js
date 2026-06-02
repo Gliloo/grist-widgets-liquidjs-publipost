@@ -10,6 +10,7 @@ let template = undefined; // Compiled template or error
 let cache; // Cache for tables and fields
 let refreshTimer; // Timer for refresh at regular interval
 let tokenInfo; // Access token
+let currentAccessLevel = 'read table'; // Track current access level
 const engine = new liquidjs.Liquid({
     outputEscape: "escape",
     jsTruthy: true,
@@ -28,16 +29,20 @@ container.addEventListener("load", () => {
 });
 
 
-// ✅ CORRECTION 1 : requiredAccess passe à 'full' pour que la config fonctionne
+// ✅ CORRECTION : requiredAccess reste 'read table' pour que les editors puissent voir le widget
 grist.ready({
     onEditOptions: openConfig,
-    requiredAccess: 'full',
+    requiredAccess: 'read table',
     allowSelectBy: true
 });
 
-
-// ✅ CORRECTION 2 : suppression des deux blocs try/catch dupliqués en haut
-// (le token sera récupéré seulement quand nécessaire, dans render())
+// ✅ NOUVEAU : détecter le niveau d'accès actuel
+grist.onOptions((opts, interaction) => {
+    if (interaction && interaction.access_level) {
+        currentAccessLevel = interaction.access_level;
+        console.log("Niveau d'accès détecté :", currentAccessLevel);
+    }
+});
 
 
 window.addEventListener('message', async (event) => {
@@ -98,7 +103,6 @@ grist.onOptions(async opts => {
 })
 
 // Function to render the template in the HTML container
-// ✅ CORRECTION 3 : toute la fonction render() est protégée par un try/catch
 async function render() {
     try {
         const templateFromOther = options.templateFromOther || multiple;
@@ -106,12 +110,10 @@ async function render() {
         document.getElementById("print").style.display = "block";
         cache = cache ? cache : new CachedTables();
 
-        // ✅ CORRECTION 4 : le token est récupéré ici, dans un try/catch
         try {
             tokenInfo = tokenInfo || await grist.docApi.getAccessToken({ readOnly: true });
         } catch (e) {
-            console.warn("Token non disponible (droits insuffisants) :", e);
-            // On continue quand même, certaines fonctions seront juste désactivées
+            console.warn("Token non disponible :", e);
         }
 
         const tableId = await grist.selectedTable.getTableId();
@@ -164,12 +166,11 @@ async function render() {
         refreshTimer = setTimeout(() => { cache = null; render() }, 3000);
 
     } catch (e) {
-        // ✅ Message gracieux si l'utilisateur n'a pas les droits
         console.warn("Erreur de rendu :", e);
         settings.innerHTML = `
             <div style="padding: 16px; font-family: sans-serif; color: #555;">
-                <p><strong>⚠️ Affichage limité</strong></p>
-                <p>Ce widget nécessite des droits d'accès plus élevés pour afficher le contenu.</p>
+                <p><strong>⚠️ Erreur d'affichage</strong></p>
+                <p>Impossible d'afficher le contenu. Vérifiez la configuration du widget.</p>
                 <p style="font-size: 0.9em; color: #888;">Détail : ${e.message || e}</p>
             </div>
         `;
@@ -188,6 +189,23 @@ function cleanUpHtml(input) {
 
 // Function to open the widget configuration
 async function openConfig(opts) {
+    // ✅ CORRECTION : vérifier les droits avant d'ouvrir la config
+    if (currentAccessLevel !== 'full') {
+        settings.innerHTML = `
+            <div style="padding: 16px; font-family: sans-serif; color: #555;">
+                <p><strong>🔒 Configuration réservée aux administrateurs</strong></p>
+                <p>La configuration du widget nécessite des droits complets sur le document.</p>
+                <p>Le widget fonctionne normalement pour la visualisation et l'impression.</p>
+                <p style="margin-top: 12px; font-size: 0.9em; color: #888;">
+                    Pour configurer ce widget, demandez à un propriétaire du document de le faire, 
+                    ou connectez-vous avec un compte ayant les droits complets.
+                </p>
+            </div>
+        `;
+        container.style.display = "none";
+        document.getElementById("print").style.display = "none";
+        return;
+    }
 
     clearTimeout(refreshTimer);
     previousHtml = "";
