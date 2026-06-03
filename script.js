@@ -1,5 +1,6 @@
 // Script for a Grist widget using Liquid templating
 // This script handles the display of Liquid templates based on Grist data
+//petit test pour push et encore un autre
 
 let options = null; // Widget configuration options
 let record = null; // Received record
