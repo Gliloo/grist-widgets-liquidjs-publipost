@@ -46,7 +46,7 @@ grist.onRecord(rec => {
     } else {
         render();
     }
-}, { includeColumns: "normal" });
+}, { includeColumns: "shown" });
 
 // ── RENDU ───────────────────────────────────────────────────────────────────
 async function render() {
