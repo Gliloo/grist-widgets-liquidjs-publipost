@@ -1,6 +1,7 @@
 // Widget Grist Liquid simplifié - fonctionne avec 'read table'
 // Pas de grist.docApi, pas de fetchTable, pas de getAccessToken
 // Template lu depuis une colonne de la table courante via grist.onRecord
+//test
 
 const engine = new liquidjs.Liquid({ jsTruthy: true });
 
@@ -64,31 +65,31 @@ async function render() {
 
     // Construire les données Liquid à partir du record brut
     const data = {};
-    for (const [key, value] of Object.entries(currentRecord)) {
-        if (key.startsWith("gristHelper_")) continue;
-        if (Array.isArray(value) && value[0] === "D") {
-            data[key] = new Date(value[1] * 1000);
-        } else if (Array.isArray(value) && value[0] === "d") {
-            data[key] = new Date(value[1] * 1000);
-        } else if (typeof value === "number" && /date/i.test(key) && value > 0) {
-            data[key] = new Date(value * 1000);
-        } else if (typeof value === "string") {
-            // Tentative de parse JSON automatique
-            const trimmed = value.trim();
-            if ((trimmed.startsWith("[") && trimmed.endsWith("]")) ||
-                (trimmed.startsWith("{") && trimmed.endsWith("}"))) {
-                try {
-                    data[key] = JSON.parse(trimmed);
-                } catch {
-                    data[key] = value;
-                }
-            } else {
+for (const [key, value] of Object.entries(currentRecord)) {
+    if (key.startsWith("gristHelper_")) continue;
+    if (Array.isArray(value) && value[0] === "D") {
+        data[key] = new Date(value[1] * 1000);
+    } else if (Array.isArray(value) && value[0] === "d") {
+        data[key] = new Date(value[1] * 1000);
+    } else if (typeof value === "number" && /date/i.test(key) && value > 0) {
+        data[key] = new Date(value * 1000);
+    } else if (typeof value === "string") {
+        // Tentative de parse JSON automatique
+        const trimmed = value.trim();
+        if ((trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+            (trimmed.startsWith("{") && trimmed.endsWith("}"))) {
+            try {
+                data[key] = JSON.parse(trimmed);
+            } catch {
                 data[key] = value;
             }
         } else {
             data[key] = value;
         }
+    } else {
+        data[key] = value;
     }
+}
 
     let html;
     try {
