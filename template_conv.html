@@ -4,177 +4,430 @@
   <meta charset="utf-8">
   <title>Convention de partenariat - ENT</title>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 2em; max-width: 950px; }
-    h1, h2, h3 { margin-top: 1.2em; color: #003366; }
-    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-    th, td { border: 1px solid #ccc; padding: 6px; }
-    .signature { margin-top: 3em; }
-    .article { margin-top: 2em; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── NUMÉROTATION DES PAGES ── */
+    @page {
+      margin: 15mm 12mm 20mm 12mm;
+      @bottom-center {
+        content: "Convention de partenariat ENT  |  Page " counter(page);
+        font-size: 8pt;
+        color: #777;
+      }
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10.5pt;
+      color: #111;
+      background: #fff;
+      padding: 20px 30px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── EN-TÊTE ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #00308F;
+      padding-bottom: 10px;
+    }
+
+    .header img { width: 350px; }
+
+    .header-right {
+      font-size: 9pt;
+      text-align: right;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .header-right strong {
+      font-size: 9.5pt;
+      color: #00308F;
+    }
+
+    /* ── TITRE CENTRAL ── */
+    .titre-convention {
+      text-align: center;
+      margin: 16px 0 14px;
+      border: 2px solid #00308F;
+      padding: 10px 20px;
+      background: #f4f7fb;
+    }
+
+    .titre-convention h1 {
+      font-size: 13pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #00308F;
+    }
+
+    .titre-convention h2 {
+      font-size: 10.5pt;
+      font-weight: normal;
+      color: #00308F;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    /* ── SECTION PARTIES ── */
+    .section-parties {
+      margin: 12px 0;
+      line-height: 1.8;
+    }
+
+    .section-parties p {
+      margin-bottom: 4px;
+    }
+
+    .label-entre {
+      font-weight: bold;
+      font-size: 10.5pt;
+    }
+
+    /* ── RÉFÉRENCES ── */
+    .references {
+      background: #f4f7fb;
+      border-left: 3px solid #00308F;
+      padding: 7px 12px;
+      margin: 10px 0;
+      font-size: 9pt;
+      line-height: 1.6;
+    }
+
+    .references strong {
+      font-size: 9.5pt;
+    }
+
+    /* ── ARTICLES ── */
+    .article {
+      margin: 12px 0;
+      line-height: 1.65;
+      page-break-inside: avoid;
+    }
+
+    .article h2 {
+      font-size: 10.5pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      border-bottom: 1px solid #00308F;
+      margin-bottom: 6px;
+      padding-bottom: 2px;
+      color: #00308F;
+    }
+
+    .article p {
+      margin-bottom: 5px;
+    }
+
+    .article ul {
+      margin: 4px 0 4px 18px;
+      list-style: disc;
+    }
+
+    .article ul li {
+      margin-bottom: 3px;
+    }
+
+    .article ul ul {
+      list-style: circle;
+      margin-top: 3px;
+    }
+
+    /* ── TABLEAU ANNEXE ── */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 8px 0;
+      font-size: 9.5pt;
+    }
+
+    th {
+      background: #f4f7fb;
+      color: #00308F;
+      font-weight: bold;
+      border: 1px solid #00308F;
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    td {
+      border: 1px solid #ccc;
+      padding: 5px 8px;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td {
+      background: #fafcff;
+    }
+
+    /* ── SIGNATURES ── */
+    .bloc-signatures {
+      margin-top: 20px;
+      border-top: 2px solid #00308F;
+      padding-top: 12px;
+      page-break-before: always;
+    }
+
+    .lieu-date {
+      text-align: center;
+      margin-bottom: 14px;
+      font-size: 10pt;
+    }
+
+    table.signatures {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table.signatures td {
+      width: 50%;
+      border: 1px solid #00308F;
+      padding: 12px 14px;
+      vertical-align: top;
+      font-size: 9.5pt;
+      line-height: 1.6;
+    }
+
+    table.signatures td em {
+      font-size: 9pt;
+      color: #444;
+    }
+
+    /* ── PIED DE PAGE (écran) ── */
+    .footer {
+      margin-top: 16px;
+      border-top: 1px solid #ccc;
+      padding-top: 6px;
+      font-size: 8pt;
+      color: #777;
+      text-align: center;
+    }
+
+    /* ── IMPRESSION ── */
+    @media print {
+      body { padding: 0; font-size: 10pt; }
+      .footer { display: none; }
+      .titre-convention { background: #f4f7fb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .references { background: #f4f7fb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      th { background: #f4f7fb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      tr:nth-child(even) td { background: #fafcff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      a { text-decoration: none; color: #111; }
+    }
   </style>
 </head>
 <body>
 
-<h1>Convention de partenariat<br>« Mise en place d’un Espace Numérique de Travail (E.N.T.) »</h1>
+<!-- ══════════════════════════════════════════════════════
+     EN-TÊTE
+════════════════════════════════════════════════════════ -->
+<div class="header">
+  <div class="header-left">
+    <img src="https://nuage03.apps.education.fr/index.php/s/ASzRCqogXCTPr22/download/logo_dsden.jpg"
+         alt="Logo DSDEN Alpes-Maritimes" />
+  </div>
+  <div class="header-right">
+    <strong>Direction des Services Départementaux<br>
+    de l'Éducation Nationale<br>
+    des Alpes-Maritimes</strong><br><br>
+    53 Avenue Cap de Croix<br>
+    06181 Nice Cedex 2<br><br>
+    Numérique éducatif<br>
+    Espaces Numériques de Travail
+  </div>
+</div>
 
-<p><strong>Entre, d’une part,</strong><br>
-La Direction des Services Départementaux de l’Éducation Nationale (D.S.D.E.N) des Alpes-Maritimes<br>
-Située 53 Avenue Cap de Croix - 06181 Nice Cedex 2<br>
-Représentée par M. Laurent LE MERCIER, Inspecteur d’académie, Directeur Académique des Services de l’Éducation Nationale des Alpes-Maritimes<br>
-Ci-après dénommée « Académie »</p>
+<!-- ══════════════════════════════════════════════════════
+     TITRE
+════════════════════════════════════════════════════════ -->
+<div class="titre-convention">
+  <h1>Convention de partenariat</h1>
+  <h2>« Mise en place d'un Espace Numérique de Travail (E.N.T.) »</h2>
+</div>
 
-<p><strong>Et, d’autre part,</strong><br>
-La collectivité <strong>{{ collectivite_nom }}</strong><br>
-Située <strong>{{ collectivite_adresse }}</strong><br>
-Représentée par M./Mme <strong>{{ maire_nom }}</strong><br>
-Ci-après dénommée « la Collectivité »</p>
+<!-- ══════════════════════════════════════════════════════
+     PARTIES
+════════════════════════════════════════════════════════ -->
+<div class="section-parties">
+  <p><span class="label-entre">Entre, d'une part,</span></p>
+  <p>
+    La Direction des Services Départementaux de l'Éducation Nationale (D.S.D.E.N) des Alpes-Maritimes<br>
+    Située 53 Avenue Cap de Croix - 06181 Nice Cedex 2<br>
+    Représentée par M. Laurent LE MERCIER, Inspecteur d'académie, Directeur Académique des Services de l'Éducation Nationale des Alpes-Maritimes<br>
+    Ci-après dénommée « Académie »
+  </p>
 
-<p>Ci-après conjointement dénommées « les Parties ».</p>
+  <br>
+  <p><span class="label-entre">Et, d'autre part,</span></p>
+  <p>
+    La collectivité <strong>{{ collectivite_nom }}</strong><br>
+    Située <strong>{{ collectivite_adresse }}</strong><br>
+    Représentée par M./Mme <strong>{{ maire_nom }}</strong><br>
+    Ci-après dénommée « la Collectivité »
+  </p>
 
-<p><strong>Il est convenu ce qui suit :</strong></p>
+  <br>
+  <p>Ci-après conjointement dénommées « les Parties ».</p>
+  <p><strong>Il est convenu ce qui suit :</strong></p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     RÉFÉRENCES
+════════════════════════════════════════════════════════ -->
+<div class="references">
+  <strong>Références :</strong><br>
+  Article D. 411-2 du code de l'éducation<br>
+  Règlement (UE) 2016/679 du Parlement européen et du Conseil du 27 avril 2016 (RGPD)<br>
+  Schéma Directeur des Espaces Numériques de Travail (S.D.E.T.) — Ministère de l'Éducation nationale
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     ARTICLES
+════════════════════════════════════════════════════════ -->
 
 <div class="article">
-<h2>Préambule</h2>
-
-<p>La maîtrise des compétences numériques est un enjeu majeur pour l’avenir des élèves : elle est une condition de leur insertion citoyenne, sociale et professionnelle. Elle est désormais incluse dans l’ensemble des programmes scolaires.</p>
-
-<p>Dans ce contexte,</p>
-
-<p>Afin de favoriser le développement de ces compétences et la diversification des usages pédagogiques du numérique, la collectivité a décidé de mettre en place un espace numérique de travail (E.N.T.) dans une ou plusieurs des écoles citées en annexe.</p>
-
-<p>Un E.N.T. est un ensemble intégré de services numériques choisis et mis à disposition de tous les acteurs de la communauté éducative, d’un ou plusieurs établissements de l’enseignement primaire, secondaire ou supérieur, dans un cadre défini par un schéma directeur des E.N.T. (S.D.E.T.). Il constitue un point d’entrée unifié permettant à l’utilisateur d’accéder, selon son profil et son niveau d’habilitation, aux services et contenus numériques offerts.</p>
-
-<p>Les modalités selon lesquelles sont organisées les relations entre l’Éducation nationale, l’école et la société chargée de fournir ce service sont une condition essentielle à la réussite de ce programme en direction de cette école.</p>
+  <h2>Préambule</h2>
+  <p>La maîtrise des compétences numériques est un enjeu majeur pour l'avenir des élèves : elle est une condition de leur insertion citoyenne, sociale et professionnelle. Elle est désormais incluse dans l'ensemble des programmes scolaires.</p>
+  <p>Dans ce contexte, afin de favoriser le développement de ces compétences et la diversification des usages pédagogiques du numérique, la collectivité a décidé de mettre en place un espace numérique de travail (E.N.T.) dans une ou plusieurs des écoles citées en annexe.</p>
+  <p>Un E.N.T. est un ensemble intégré de services numériques choisis et mis à disposition de tous les acteurs de la communauté éducative, d'un ou plusieurs établissements de l'enseignement primaire, secondaire ou supérieur, dans un cadre défini par un schéma directeur des E.N.T. (S.D.E.T.). Il constitue un point d'entrée unifié permettant à l'utilisateur d'accéder, selon son profil et son niveau d'habilitation, aux services et contenus numériques offerts.</p>
+  <p>Les modalités selon lesquelles sont organisées les relations entre l'Éducation nationale, l'école et la société chargée de fournir ce service sont une condition essentielle à la réussite de ce programme en direction de cette école.</p>
 </div>
 
 <div class="article">
-<h2>Article 1. Objet de la convention</h2>
-<p>Cette convention vise à formaliser les responsabilités et les rôles de chacune des Parties dans le cadre de la mise en œuvre des Espaces Numériques de Travail au sein des écoles citées en annexe.</p>
+  <h2>Article 1. Objet de la convention</h2>
+  <p>Cette convention vise à formaliser les responsabilités et les rôles de chacune des Parties dans le cadre de la mise en œuvre des Espaces Numériques de Travail au sein des écoles citées en annexe.</p>
 </div>
 
 <div class="article">
-<h2>Article 2. Description du projet</h2>
-
-<p>Le projet consiste à la mise en œuvre et au déploiement d’un E.N.T. dans les écoles citées en annexe. Il est à noter que l’usage de l’E.N.T. doit être présenté dans chaque conseil d’école (article D. 411-2 du code de l’éducation).</p>
-
-<p>Les principaux objectifs du projet sont :</p>
-<ul>
-  <li>la sensibilisation de toute la communauté éducative du territoire aux outils et services numériques,</li>
-  <li>le développement et l’usage de nouvelles pratiques pédagogiques : en particulier autour des compétences numériques du socle commun de connaissances, de compétences et de culture,</li>
-  <li>l’accès à différents contenus et ressources pédagogiques,</li>
-  <li>l’ouverture de l’école aux parents afin de permettre à ces derniers de s’impliquer davantage dans l’action éducative,</li>
-  <li>l’intégration des partenaires locaux intervenant dans le domaine éducatif, en particulier les acteurs périscolaires et extra-scolaires.</li>
-</ul>
-
-<p>L’accompagnement de ce projet consiste à :</p>
-<ul>
-  <li>observer et évaluer le développement des usages du numérique dans les écoles, en particulier les usages pédagogiques, dans le cadre de l’E.N.T.,</li>
-  <li>analyser les modalités organisationnelles et techniques nécessaires pour accompagner le projet.</li>
-</ul>
-
-<p>L’E.N.T. comportera les fonctionnalités suivantes :</p>
-<p>{{ ent_fonctionnalites }}</p>
-<p>{{ ent_fonctionnalites_perso }}</p>
+  <h2>Article 2. Description du projet</h2>
+  <p>Le projet consiste à la mise en œuvre et au déploiement d'un E.N.T. dans les écoles citées en annexe. Il est à noter que l'usage de l'E.N.T. doit être présenté dans chaque conseil d'école (article D. 411-2 du code de l'éducation).</p>
+  <p>Les principaux objectifs du projet sont :</p>
+  <ul>
+    <li>la sensibilisation de toute la communauté éducative du territoire aux outils et services numériques,</li>
+    <li>le développement et l'usage de nouvelles pratiques pédagogiques : en particulier autour des compétences numériques du socle commun de connaissances, de compétences et de culture,</li>
+    <li>l'accès à différents contenus et ressources pédagogiques,</li>
+    <li>l'ouverture de l'école aux parents afin de permettre à ces derniers de s'impliquer davantage dans l'action éducative,</li>
+    <li>l'intégration des partenaires locaux intervenant dans le domaine éducatif, en particulier les acteurs périscolaires et extra-scolaires.</li>
+  </ul>
+  <p>L'accompagnement de ce projet consiste à :</p>
+  <ul>
+    <li>observer et évaluer le développement des usages du numérique dans les écoles, en particulier les usages pédagogiques, dans le cadre de l'E.N.T.,</li>
+    <li>analyser les modalités organisationnelles et techniques nécessaires pour accompagner le projet.</li>
+  </ul>
+  <p>L'E.N.T. comportera les fonctionnalités suivantes :</p>
+  <p>{{ ent_fonctionnalites }}</p>
+  <p>{{ ent_fonctionnalites_perso }}</p>
 </div>
 
 <div class="article">
-<h2>Article 3. Engagements réciproques</h2>
-
-<p><strong>La DSDEN s’engage à :</strong></p>
-<ul>
-  <li>s’assurer de la mise à disposition des données de l’annuaire académique fédérateur concernant les écoles inscrites en annexe,</li>
-  <li>désigner les formateurs qui assisteront aux formations dispensées par la (ou les) société(s) retenues,</li>
-  <li>former les enseignants de l’école par le biais des conseillers pédagogiques, désignés par l’Inspection de l’Éducation nationale territorialement compétente,</li>
-  <li>recueillir auprès des usagers les demandes d’évolution, qui seront priorisées en lien avec l’inspecteur de l’éducation nationale chargé de la circonscription où sera déployé l’E.N.T.</li>
-</ul>
-
-<p><strong>La Collectivité s’engage à :</strong></p>
-<ul>
-  <li>financer l’acquisition de la solution d’E.N.T., les infrastructures (liaison internet) ou équipements nécessaires à son utilisation et à les maintenir dans des conditions opérationnelles de fonctionnement conformément au S.D.E.T.,</li>
-  <li>choisir une solution qui respecte le Schéma Directeur des E.N.T. (S.D.E.T.), le plus récent, défini par le Ministère de l’Éducation nationale, de la Jeunesse et des Sports,</li>
-  <li>veiller à ce que la solution ENT retenue :
-    <ul>
-      <li>permette à l’école de récupérer les données en fin d’année, si nécessaire,</li>
-      <li>laisse à disposition les données des élèves, des professeurs et parents trois mois après la fin du contrat de façon à permettre à chacun de récupérer ses données,</li>
-      <li>présente toutes les garanties requises à la sécurité et la confidentialité des données,</li>
-      <li>s’engage à ne pas entreprendre des démarches commerciales directes ou indirectes en direction des familles et des élèves, plus globalement des usagers de l’E.N.T. Aucune publicité, communication concernant l’usage de cet ENT, ne pourra être réalisée par la société fournisseur de cette solution sans l’accord préalable et conjoint de l’Education nationale et de la commune concernée.</li>
-    </ul>
-  </li>
-</ul>
+  <h2>Article 3. Engagements réciproques</h2>
+  <p><strong>La DSDEN s'engage à :</strong></p>
+  <ul>
+    <li>s'assurer de la mise à disposition des données de l'annuaire académique fédérateur concernant les écoles inscrites en annexe,</li>
+    <li>désigner les formateurs qui assisteront aux formations dispensées par la (ou les) société(s) retenues,</li>
+    <li>former les enseignants de l'école par le biais des conseillers pédagogiques, désignés par l'Inspection de l'Éducation nationale territorialement compétente,</li>
+    <li>recueillir auprès des usagers les demandes d'évolution, qui seront priorisées en lien avec l'inspecteur de l'éducation nationale chargé de la circonscription où sera déployé l'E.N.T.</li>
+  </ul>
+  <p><strong>La Collectivité s'engage à :</strong></p>
+  <ul>
+    <li>financer l'acquisition de la solution d'E.N.T., les infrastructures (liaison internet) ou équipements nécessaires à son utilisation et à les maintenir dans des conditions opérationnelles de fonctionnement conformément au S.D.E.T.,</li>
+    <li>choisir une solution qui respecte le Schéma Directeur des E.N.T. (S.D.E.T.), le plus récent, défini par le Ministère de l'Éducation nationale, de la Jeunesse et des Sports,</li>
+    <li>veiller à ce que la solution ENT retenue :
+      <ul>
+        <li>permette à l'école de récupérer les données en fin d'année, si nécessaire,</li>
+        <li>laisse à disposition les données des élèves, des professeurs et parents trois mois après la fin du contrat de façon à permettre à chacun de récupérer ses données,</li>
+        <li>présente toutes les garanties requises à la sécurité et la confidentialité des données,</li>
+        <li>s'engage à ne pas entreprendre des démarches commerciales directes ou indirectes en direction des familles et des élèves, plus globalement des usagers de l'E.N.T. Aucune publicité, communication concernant l'usage de cet ENT, ne pourra être réalisée par la société fournisseur de cette solution sans l'accord préalable et conjoint de l'Education nationale et de la commune concernée.</li>
+      </ul>
+    </li>
+  </ul>
 </div>
 
 <div class="article">
-<h2>Articles 4. Gouvernance</h2>
-<p>Les Parties s’engagent à assurer un suivi périodique du projet.</p>
-<p>Ce projet est piloté par un comité local comprenant des représentants de la collectivité, de l’Éducation nationale et, éventuellement, de la (ou des) société(s) retenue(s) pour la solution E.N.T.</p>
-<p>Il se réunit à minima une fois par an et chaque fois que les Parties considèrent que c’est nécessaire.</p>
+  <h2>Article 4. Gouvernance</h2>
+  <p>Les Parties s'engagent à assurer un suivi périodique du projet.</p>
+  <p>Ce projet est piloté par un comité local comprenant des représentants de la collectivité, de l'Éducation nationale et, éventuellement, de la (ou des) société(s) retenue(s) pour la solution E.N.T.</p>
+  <p>Il se réunit à minima une fois par an et chaque fois que les Parties considèrent que c'est nécessaire.</p>
 </div>
 
 <div class="article">
-<h2>Article 5. Responsabilité éditoriale et règles déontologiques</h2>
-<p>La responsabilité des publications et informations transmises aux familles incombe à la Partie dont la personne qui les a diffusées, est responsable. La diffusion d’informations doit respecter le cadre de la neutralité du service public de l’éducation et ne pas aller au-delà des compétences autour de l’école de chaque Partie telles que précisées dans le code de l’éducation.</p>
+  <h2>Article 5. Responsabilité éditoriale et règles déontologiques</h2>
+  <p>La responsabilité des publications et informations transmises aux familles incombe à la Partie dont la personne qui les a diffusées, est responsable. La diffusion d'informations doit respecter le cadre de la neutralité du service public de l'éducation et ne pas aller au-delà des compétences autour de l'école de chaque Partie telles que précisées dans le code de l'éducation.</p>
 </div>
 
 <div class="article">
-<h2>Article 6. Protection des données à caractère personnel</h2>
-
-<p>La responsabilité des traitements se fait de manière conjointe. Cet article, et le suivant, établissent les responsabilités et les obligations respectives de chacune des Parties en ce qui concerne les traitements de données à caractère personnel au sens de l’article 26 du règlement UE 2016/679 dit « RGPD ».</p>
-
-<p>Chacune des Parties sera responsable des traitements dont elle aura décidé la mise en place et dont la liste est précisée à l’article 7 de la convention.</p>
-
-<p>Il appartiendra à chaque Partie de conclure avec le prestataire proposant la solution d’Espace Numérique de Travail un accord de sous-traitance au sens de l’article 28 du règlement UE 2016/679 dit « RGPD » pour les traitements dont elle est responsable.</p>
-
-<p>Les Parties s’engagent à informer les utilisateurs de l’ENT des traitements qui sont opérés sur leurs données et des droits qui s’y rapportent, conformément aux articles 13 et 14 du règlement UE 2016/679 dit « RGPD ». Cette information peut être faite de façon conjointe si nécessaire.</p>
-
-<p>Les Parties s’engagent à signaler sans délai, et au maximum sous 48 heures, toute violation, tentative de violation ou violation suspectée de la confidentialité des données à l’autre Partie. En cas de violation des données, la Collectivité et l’Éducation nationale travaillent conjointement à la rédaction du dossier de notification de la violation auprès de l’autorité de contrôle (CNIL).</p>
-
-<p>Chacune des Parties s’engage à porter à son registre des activités de traitement les mentions nécessaires à l’exécution de la présente convention conformément à l’article 30 du règlement UE 2016/679 dit « RGPD ».</p>
-
-<p>Chacune des Parties, pour les traitements qui la concernent, s’engage à répondre à toute demande d’exercice du droit d’accès, de rectification, d’effacement ou d’opposition conformément à l’article 15 du règlement UE 2016/679 dit « RGPD ». Une réponse commune peut être envisagée au cas par cas.</p>
+  <h2>Article 6. Protection des données à caractère personnel</h2>
+  <p>La responsabilité des traitements se fait de manière conjointe. Cet article, et le suivant, établissent les responsabilités et les obligations respectives de chacune des Parties en ce qui concerne les traitements de données à caractère personnel au sens de l'article 26 du règlement UE 2016/679 dit « RGPD ».</p>
+  <p>Chacune des Parties sera responsable des traitements dont elle aura décidé la mise en place et dont la liste est précisée à l'article 7 de la convention.</p>
+  <p>Il appartiendra à chaque Partie de conclure avec le prestataire proposant la solution d'Espace Numérique de Travail un accord de sous-traitance au sens de l'article 28 du règlement UE 2016/679 dit « RGPD » pour les traitements dont elle est responsable.</p>
+  <p>Les Parties s'engagent à informer les utilisateurs de l'ENT des traitements qui sont opérés sur leurs données et des droits qui s'y rapportent, conformément aux articles 13 et 14 du règlement UE 2016/679 dit « RGPD ». Cette information peut être faite de façon conjointe si nécessaire.</p>
+  <p>Les Parties s'engagent à signaler sans délai, et au maximum sous 48 heures, toute violation, tentative de violation ou violation suspectée de la confidentialité des données à l'autre Partie. En cas de violation des données, la Collectivité et l'Éducation nationale travaillent conjointement à la rédaction du dossier de notification de la violation auprès de l'autorité de contrôle (CNIL).</p>
+  <p>Chacune des Parties s'engage à porter à son registre des activités de traitement les mentions nécessaires à l'exécution de la présente convention conformément à l'article 30 du règlement UE 2016/679 dit « RGPD ».</p>
+  <p>Chacune des Parties, pour les traitements qui la concernent, s'engage à répondre à toute demande d'exercice du droit d'accès, de rectification, d'effacement ou d'opposition conformément à l'article 15 du règlement UE 2016/679 dit « RGPD ». Une réponse commune peut être envisagée au cas par cas.</p>
 </div>
 
 <div class="article">
-<h2>Article 7. Répartition de la responsabilité des traitements</h2>
-
-<p>Les traitements de données à caractère personnel suivants seront placés sous la responsabilité de l’Académie :</p>
-<p>{{ responsabilites_traitements_acad }}</p>
-
-<p>Les traitements de données à caractère personnel suivants seront placés sous la responsabilité de la Collectivité :</p>
-<p>{{ responsabilites_traitements_societe }}</p>
-
-<div class="article">
-<h2>Article 8. Durée de la convention</h2>
-<p>La présente convention est conclue pour une durée de <strong>{{ duree_convention }}</strong> années scolaires à compter de sa signature et prendra fin le 31 août <strong>{{ date_fin }}</strong>.</p>
+  <h2>Article 7. Répartition de la responsabilité des traitements</h2>
+  <p>Les traitements de données à caractère personnel suivants seront placés sous la responsabilité de l'Académie :</p>
+  <p>{{ responsabilites_traitements_acad }}</p>
+  <p>Les traitements de données à caractère personnel suivants seront placés sous la responsabilité de la Collectivité :</p>
+  <p>{{ responsabilites_traitements_societe }}</p>
 </div>
 
 <div class="article">
-<h2>Article 9. Modification et résiliation de la convention</h2>
-<p>La présente convention pourra être dénoncée ou modifiée par avenant, à l’initiative de l’une des deux Parties ou d’un commun accord, par lettre recommandée avec accusé de réception, en respectant un délai de préavis de 3 mois.</p>
+  <h2>Article 8. Durée de la convention</h2>
+  <p>La présente convention est conclue pour une durée de <strong>{{ duree_convention }}</strong> années scolaires à compter de sa signature et prendra fin le 31 août <strong>{{ date_fin }}</strong>.</p>
 </div>
 
 <div class="article">
-<h2>Article 10. Litiges</h2>
-<p>En cas de litige relatif à la présente convention et après avoir exploré toutes les voies de recours amiables possibles, il est expressément donné compétence au tribunal administratif de Nice.</p>
-</div>
-
-
-<p>Ce document comporte une annexe.</p>
-
-<div class="signature">
-<p>Fait à <strong>{{ lieu_signature }}</strong>, le <strong>{{ date_signature }}</strong>, en deux exemplaires originaux</p>
-
-<p>Laurent LE MERCIER<br>
-Inspecteur d’académie, Directeur Académique des Services de l’Éducation Nationale des Alpes-Maritimes</p>
-
-<p>{{ maire_nom }}<br>
-Maire de la commune de {{ collectivite_nom }}</p>
+  <h2>Article 9. Modification et résiliation de la convention</h2>
+  <p>La présente convention pourra être dénoncée ou modifiée par avenant, à l'initiative de l'une des deux Parties ou d'un commun accord, par lettre recommandée avec accusé de réception, en respectant un délai de préavis de 3 mois.</p>
 </div>
 
 <div class="article">
+  <h2>Article 10. Litiges</h2>
+  <p>En cas de litige relatif à la présente convention et après avoir exploré toutes les voies de recours amiables possibles, il est expressément donné compétence au tribunal administratif de Nice.</p>
+</div>
+
+<p style="margin: 14px 0; font-size: 10pt;">Ce document comporte une annexe.</p>
+
+<!-- ══════════════════════════════════════════════════════
+     SIGNATURES
+════════════════════════════════════════════════════════ -->
+<div class="bloc-signatures">
+  <p class="lieu-date">
+    Fait à <strong>{{ lieu_signature }}</strong>, le <strong>{{ date_signature }}</strong>, en deux exemplaires originaux
+  </p>
+
+  <table class="signatures">
+    <tr>
+      <td>
+        <strong>Laurent LE MERCIER</strong><br>
+        Inspecteur d'académie, Directeur Académique des Services de l'Éducation Nationale des Alpes-Maritimes
+        <br><br><br><br>
+      </td>
+      <td>
+        <strong>{{ maire_nom }}</strong><br>
+        Maire de la commune de {{ collectivite_nom }}
+        <br><br><br><br>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     ANNEXE
+════════════════════════════════════════════════════════ -->
+<div class="article" style="margin-top: 24px;">
   <h2>Annexe</h2>
-
   <p>
     Écoles publiques concernées par la convention de partenariat visant à la mise en place
-    d’un Environnement Numérique de Travail sur la commune de
+    d'un Environnement Numérique de Travail sur la commune de
     <strong>{{ collectivite_nom }}</strong>
     avec la solution <strong>{{ solution_nom }}</strong>
     de la société <strong>{{ societe_nom }}</strong>,
@@ -186,25 +439,34 @@ Maire de la commune de {{ collectivite_nom }}</p>
       <tr>
         <th>Type d'école</th>
         <th>RNE</th>
-       <th>Nom de l'école</th>
-       <th>Adresse</th>
-       <th>Email</th>
+        <th>Nom de l'école</th>
+        <th>Adresse</th>
+        <th>Email</th>
       </tr>
-   </thead>
-   <tbody>
-     {% for ecole in ecoles_json %}
+    </thead>
+    <tbody>
+    {% for ecole in ecoles_json %}
       <tr>
-       <td>{{ ecole.ecole_type }}</td>
-       <td>{{ ecole.ecole_rne }}</td>
-       <td>{{ ecole.ecole_nom }}</td>
-       <td>{{ ecole.ecole_adresse }}</td>
-       <td>{{ ecole.ecole_email }}</td>
-     </tr>
-      {% endfor %}
-   </tbody>
+        <td>{{ ecole.ecole_type }}</td>
+        <td>{{ ecole.ecole_rne }}</td>
+        <td>{{ ecole.ecole_nom }}</td>
+        <td>{{ ecole.ecole_adresse }}</td>
+        <td>{{ ecole.ecole_email }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+    </tbody>
   </table>
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     PIED DE PAGE (écran uniquement)
+════════════════════════════════════════════════════════ -->
+<div class="footer">
+  Convention de partenariat ENT — Mai 2026
+</div>
 
 </body>
 </html>
