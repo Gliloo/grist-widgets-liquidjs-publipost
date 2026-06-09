@@ -43,11 +43,49 @@
             padding: 0;
         }
     </style>
+    <style>
+  /* ── CONFIGURATION DE L'IMPRESSION AVEC PAGÉDJ ── */
+  @page {
+    size: A4;
+    margin: 15mm 12mm 20mm 12mm; /* Haut, Droite, Bas, Gauche */
+    
+    /* Le pied de page sera répété automatiquement sur chaque page */
+    @bottom-center {
+      content: "Convention de partenariat ENT  |  Page " counter(page) " sur " counter(pages);
+      font-size: 8pt;
+      color: #666;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+  }
+
+  /* Force l'annexe sur une nouvelle page */
+  .annexe {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Cache le footer écran lors de l'impression pour éviter les doublons */
+  @media print {
+    .footer-ecran { display: none !important; }
+  }
+</style>
 </head>
 <body>
     <button id="print" onclick="print()">🖨️ Imprimer</button>
     <div id="settings"></div>
     <iframe id="container"></iframe>
     <script src="./script.js"></script>
+      <!-- Votre footer visible uniquement à l'écran -->
+  <div class="footer-ecran">
+    Convention de partenariat ENT — DSDEN Alpes-Maritimes
+  </div>
+
+  <!-- Chargement de PagedJS via jsDelivr (REMPLACEZ les infos par les vôtres si c'est VOTRE script) -->
+  <!-- Si vous utilisez directement la librairie PagedJS, utilisez ce lien officiel et fiable : -->
+  <script src="https://cdn.jsdelivr.net/npm/pagedjs/dist/paged.polyfill.js"></script>
+  
+  <!-- Si vous avez VOTRE PROPRE script JS sur GitHub, chargez-le comme ceci : -->
+  <!-- <script src="https://cdn.jsdelivr.net/gh/votre-user/votre-repo@main/mon-script.js"></script> -->
+</body>
 </body>
 </html>
