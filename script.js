@@ -213,3 +213,17 @@ function cleanUpHtml(input) {
 function print() {
     container.contentWindow.print();
 }
+// Fonction appelée par Grist quand les données changent
+
+function onRecordChange(record) {
+  // 1. Votre logique habituelle pour mettre à jour le HTML
+  // updateHTML(record);
+
+  // 2. Dites à PagedJS de recalculer les pages après une petite pause
+  // (nécessaire pour laisser le temps au navigateur de rendre le nouveau HTML)
+  setTimeout(() => {
+    if (window.PagedPolyfill) {
+      window.PagedPolyfill.preview();
+    }
+  }, 500); // 500ms de délai de sécurité
+}
