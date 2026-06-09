@@ -71,8 +71,20 @@ async function render() {
         } else if (Array.isArray(value) && value[0] === "d") {
             data[key] = new Date(value[1] * 1000);
         } else if (typeof value === "number" && /date/i.test(key) && value > 0) {
-            // Heuristique : colonne dont le nom contient "date" → timestamp Unix
             data[key] = new Date(value * 1000);
+        } else if (typeof value === "string") {
+            // Tentative de parse JSON automatique
+            const trimmed = value.trim();
+            if ((trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+                (trimmed.startsWith("{") && trimmed.endsWith("}"))) {
+                try {
+                    data[key] = JSON.parse(trimmed);
+                } catch {
+                    data[key] = value;
+                }
+            } else {
+                data[key] = value;
+            }
         } else {
             data[key] = value;
         }
