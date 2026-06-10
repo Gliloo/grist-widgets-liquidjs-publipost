@@ -129,25 +129,44 @@ async function openConfig() {
         <div style="
             font-family: Arial, sans-serif;
             font-size: 13px;
-            padding: 16px;
-            max-width: 420px;
+            padding: 20px;
+            max-width: 460px;
             color: #222;
         ">
-            <h2 style="font-size:15px; margin-bottom:12px; color:#00308F;">
+            <h2 style="font-size:15px; margin-bottom:16px; color:#00308F; border-bottom: 2px solid #00308F; padding-bottom: 8px;">
                 ⚙️ Configuration du widget
             </h2>
-            <p style="margin-bottom:8px; line-height:1.5;">
-                Saisissez l'<strong>identifiant exact</strong> de la colonne Grist 
-                qui contient votre template HTML/Liquid.<br>
-                <em style="font-size:11px; color:#555;">
-                    (Nom interne visible dans : Colonne → Options → Identifiant)
-                </em>
-            </p>
+
+            <!-- ÉTAPE 1 -->
+            <div style="margin-bottom:14px; padding: 10px 12px; background:#f4f7fb; border-left: 3px solid #00308F; border-radius: 0 4px 4px 0;">
+                <div style="font-weight:bold; margin-bottom:4px;">① Autoriser l'accès aux données</div>
+                <div style="color:#444; line-height:1.6;">
+                    Dans le panneau de droite (⚙️ paramètres du widget), vérifiez que l'accès est bien défini sur
+                    <strong>« Lire les données sources sélectionnées »</strong>.
+                    Sans cela, le widget ne peut pas lire les colonnes de votre table.
+                </div>
+            </div>
+
+            <!-- ÉTAPE 2 -->
+            <div style="margin-bottom:14px; padding: 10px 12px; background:#f4f7fb; border-left: 3px solid #00308F; border-radius: 0 4px 4px 0;">
+                <div style="font-weight:bold; margin-bottom:4px;">② Identifier la colonne template</div>
+                <div style="color:#444; line-height:1.6;">
+                    Saisissez l'<strong>identifiant exact</strong> de la colonne Grist qui contient
+                    le code de votre modèle de convention (code HTML/Liquid).<br>
+                    <em style="font-size:11px; color:#666;">Nom interne visible dans : Colonne → Options → Identifiant</em>
+                </div>
+                <div style="margin-top:8px; padding: 7px 10px; background:#e8f0fb; border-radius:4px; font-size:12px; color:#00308F;">
+                    💡 Dans le Grist de génération des conventions RGPD, le code à saisir est :
+                    <strong style="font-family: monospace;">code_contenu_liquid</strong>
+                </div>
+            </div>
+
+            <!-- CHAMP DE SAISIE -->
             <input
                 id="col-id-input"
                 type="text"
                 value="${currentColId}"
-                placeholder="ex: Template_convention"
+                placeholder="ex : code_contenu_liquid"
                 style="
                     width: 100%;
                     padding: 7px 10px;
@@ -156,8 +175,10 @@ async function openConfig() {
                     font-size: 13px;
                     box-sizing: border-box;
                     margin-bottom: 12px;
+                    font-family: monospace;
                 "
             />
+
             <button
                 onclick="saveConfig()"
                 style="
