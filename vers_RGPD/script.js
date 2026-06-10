@@ -1,6 +1,7 @@
 // Widget Grist Liquid simplifié - fonctionne avec 'read table'
 // Pas de grist.docApi, pas de fetchTable, pas de getAccessToken
 // Template lu depuis une colonne de la table courante via grist.onRecord
+// test synch
 
 const engine = new liquidjs.Liquid({ jsTruthy: true });
 
