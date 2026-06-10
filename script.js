@@ -1,7 +1,7 @@
 // Widget Grist Liquid simplifié - fonctionne avec 'read table'
 // Pas de grist.docApi, pas de fetchTable, pas de getAccessToken
 // Template lu depuis une colonne de la table courante via grist.onRecord
-//test
+// test-v branche CONV RGPD
 
 const engine = new liquidjs.Liquid({ jsTruthy: true });
 
@@ -138,7 +138,7 @@ async function openConfig() {
             </h2>
             <p style="margin-bottom:8px; line-height:1.5;">
                 Saisissez l'<strong>identifiant exact</strong> de la colonne Grist 
-                qui contient votre template HTML/Liquid.<br>
+                qui contient votre Modèle de convention (code HTML/Liquid).<br>
                 <em style="font-size:11px; color:#555;">
                     (Nom interne visible dans : Colonne → Options → Identifiant)
                 </em>
@@ -147,7 +147,7 @@ async function openConfig() {
                 id="col-id-input"
                 type="text"
                 value="${currentColId}"
-                placeholder="ex: Template_convention"
+                placeholder="ex: code_contenu_liquid"
                 style="
                     width: 100%;
                     padding: 7px 10px;
