@@ -1,6 +1,7 @@
 // Widget Grist Liquid simplifié - fonctionne avec 'read table'
 // Pas de grist.docApi, pas de fetchTable, pas de getAccessToken
 // Template lu depuis une colonne de la table courante via grist.onRecord
+// test-v branche CONV RGPD
 
 const engine = new liquidjs.Liquid({ jsTruthy: true });
 
@@ -71,8 +72,20 @@ async function render() {
         } else if (Array.isArray(value) && value[0] === "d") {
             data[key] = new Date(value[1] * 1000);
         } else if (typeof value === "number" && /date/i.test(key) && value > 0) {
-            // Heuristique : colonne dont le nom contient "date" → timestamp Unix
             data[key] = new Date(value * 1000);
+        } else if (typeof value === "string") {
+            // Tentative de parse JSON automatique
+            const trimmed = value.trim();
+            if ((trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+                (trimmed.startsWith("{") && trimmed.endsWith("}"))) {
+                try {
+                    data[key] = JSON.parse(trimmed);
+                } catch {
+                    data[key] = value;
+                }
+            } else {
+                data[key] = value;
+            }
         } else {
             data[key] = value;
         }
@@ -125,7 +138,7 @@ async function openConfig() {
             </h2>
             <p style="margin-bottom:8px; line-height:1.5;">
                 Saisissez l'<strong>identifiant exact</strong> de la colonne Grist 
-                qui contient votre template HTML/Liquid.<br>
+                qui contient votre Modèle de convention (code HTML/Liquid).<br>
                 <em style="font-size:11px; color:#555;">
                     (Nom interne visible dans : Colonne → Options → Identifiant)
                 </em>
@@ -134,7 +147,7 @@ async function openConfig() {
                 id="col-id-input"
                 type="text"
                 value="${currentColId}"
-                placeholder="ex: Template_convention"
+                placeholder="ex: code_contenu_liquid"
                 style="
                     width: 100%;
                     padding: 7px 10px;
