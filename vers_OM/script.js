@@ -156,7 +156,7 @@ async function openConfig() {
                     <em style="font-size:11px; color:#666;">Nom interne visible dans : Colonne → Options → Identifiant</em>
                 </div>
                 <div style="margin-top:8px; padding: 7px 10px; background:#e8f0fb; border-radius:4px; font-size:12px; color:#00308F;">
-                    💡 Dans le Grist de génération des conventions RGPD, le code à saisir est :
+                    💡 Dans ce Grist, le code à saisir est :
                     <strong style="font-family: monospace;">code_contenu_liquid</strong>
                 </div>
             </div>
